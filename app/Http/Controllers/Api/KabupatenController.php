@@ -28,6 +28,11 @@ class KabupatenController extends Controller
         ->make(true);
     }
 
+    public function show_kab(){
+        $res = DB::table($this->table)->select("id",DB::raw("nama as text"))->get();
+        return response()->json(["status" => "success", "message" => "Success", "data" => $res],200);
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

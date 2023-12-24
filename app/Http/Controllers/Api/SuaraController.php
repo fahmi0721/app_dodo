@@ -227,6 +227,127 @@ class SuaraController extends Controller
         return "dokumen-file/gambar_".$folder."/".$filename;
 
     }
+    public function rekapitulasi(Request $request)
+    {
+        $data = array();
+        $validator = Validator::make($request->all(), [
+            'berdasarkan' => 'required',
+        ]);
+        $berdsarkan = $request->berdasarkan;
+        if($berdsarkan == "kecamatan"){
+            $validator = Validator::make($request->all(), [
+                'id_kabupaten' => 'required',
+            ]);
+        }elseif($berdsarkan == "desa"){
+            $validator = Validator::make($request->all(), [
+                'id_kabupaten' => 'required',
+                'id_kecamatan' => 'required',
+            ]);
+        }elseif($berdsarkan == "tps"){
+            $validator = Validator::make($request->all(), [
+                'id_kabupaten' => 'required',
+                'id_kecamatan' => 'required',
+                'id_desa' => 'required',
+            ]);
+        }
+
+        if ($validator->fails()) {
+            return response()->json([
+                "status"    => "warning",
+                "messages"   => $validator->errors()->first(),
+            ], 400);
+        }
+        try {
+            $data = $this->get_data_suara($berdsarkan,$request);
+
+            return response()->json(['status'=>'success','messages'=>'success','data' => $data], 200);
+        } catch(QueryException $e) { 
+            return response()->json(['status'=>'error','messages'=> $e->errorInfo[2] ], 400);
+        }
+    }
+   
+    private function get_data_suara($berdsarkan, $request){
+        $data = array();
+        if($berdsarkan == "kabupaten"){
+            $dt_kab = DB::table("m_kabupaten")->select("id","nama")->get();
+            $labels = array();
+            $dataset = array();
+            foreach($dt_kab as $kab){
+                $labels[] = $kab->nama;
+                /** PEMILIH PASTI */
+                $data_pemilih_pasti = DB::table("t_pemilih_pasti")->select(DB::raw("COUNT(id) as tot"))->where("id_kabupaten",$kab->id)->first();
+                $data['pemilih_pasti'][] = $data_pemilih_pasti->tot;
+
+                $data_suara_ayp = DB::table("t_suara_tps")->select(DB::raw("SUM(t_suara_tps.total_suara) as tot"))->join("m_kandidat","m_kandidat.id","=","t_suara_tps.id_kandidat")->where("m_kandidat.kategori","caleg")->where("t_suara_tps.id_kabupaten",$kab->id)->groupBy("t_suara_tps.id_kabupaten")->first();
+                $data['suara_ayp'][] = is_null($data_suara_ayp) ? 0 : (int) $data_suara_ayp->tot;
+
+                $data_pemilih = DB::table("t_suara_tps")->select(DB::raw("SUM(t_suara_tps.jumlah_pemilih) as tot"))->join("m_kandidat","m_kandidat.id","=","t_suara_tps.id_kandidat")->where("m_kandidat.kategori","caleg")->where("t_suara_tps.id_kabupaten",$kab->id)->groupBy("t_suara_tps.id_kabupaten")->first();
+                $data['data_pemilih'][] = is_null($data_pemilih) ? 0 : (int) $data_pemilih->tot;
+            }
+            $data['labels'] = $labels;
+            return $data;
+        }elseif($berdsarkan == "kecamatan"){
+            $id_kab = $request->id_kabupaten;
+            $dt_kec = DB::table("m_kecamatan")->select("id","nama")->where("id_kabupaten",$id_kab)->get();
+            $labels = array();
+            $dataset = array();
+            foreach($dt_kec as $dt){
+                $labels[] = $dt->nama;
+                /** PEMILIH PASTI */
+                $data_pemilih_pasti = DB::table("t_pemilih_pasti")->select(DB::raw("COUNT(id) as tot"))->where("id_kecamatan",$dt->id)->first();
+                $data['pemilih_pasti'][] = $data_pemilih_pasti->tot;
+
+                $data_suara_ayp = DB::table("t_suara_tps")->select(DB::raw("SUM(t_suara_tps.total_suara) as tot"))->join("m_kandidat","m_kandidat.id","=","t_suara_tps.id_kandidat")->where("m_kandidat.kategori","caleg")->where("t_suara_tps.id_kecamatan",$dt->id)->groupBy("t_suara_tps.id_kecamatan")->first();
+                $data['suara_ayp'][] = is_null($data_suara_ayp) ? 0 : (int) $data_suara_ayp->tot;
+
+                $data_pemilih = DB::table("t_suara_tps")->select(DB::raw("SUM(t_suara_tps.jumlah_pemilih) as tot"))->join("m_kandidat","m_kandidat.id","=","t_suara_tps.id_kandidat")->where("m_kandidat.kategori","caleg")->where("t_suara_tps.id_kecamatan",$dt->id)->groupBy("t_suara_tps.id_kecamatan")->first();
+                $data['data_pemilih'][] = is_null($data_pemilih) ? 0 : (int) $data_pemilih->tot;
+            }
+            $data['labels'] = $labels;
+            return $data;
+        }elseif($berdsarkan == "desa"){
+            $id_kec = $request->id_kecamatan;
+            $dt_des = DB::table("m_desa")->select("id","nama")->where("id_kecamatan",$id_kec)->get();
+            $labels = array();
+            $dataset = array();
+            foreach($dt_des as $dt){
+                $labels[] = $dt->nama;
+                /** PEMILIH PASTI */
+                $data_pemilih_pasti = DB::table("t_pemilih_pasti")->select(DB::raw("COUNT(id) as tot"))->where("id_desa",$dt->id)->first();
+                $data['pemilih_pasti'][] = $data_pemilih_pasti->tot;
+
+                $data_suara_ayp = DB::table("t_suara_tps")->select(DB::raw("SUM(t_suara_tps.total_suara) as tot"))->join("m_kandidat","m_kandidat.id","=","t_suara_tps.id_kandidat")->where("m_kandidat.kategori","caleg")->where("t_suara_tps.id_desa",$dt->id)->groupBy("t_suara_tps.id_desa")->first();
+                $data['suara_ayp'][] = is_null($data_suara_ayp) ? 0 : (int) $data_suara_ayp->tot;
+
+                $data_pemilih = DB::table("t_suara_tps")->select(DB::raw("SUM(t_suara_tps.jumlah_pemilih) as tot"))->join("m_kandidat","m_kandidat.id","=","t_suara_tps.id_kandidat")->where("m_kandidat.kategori","caleg")->where("t_suara_tps.id_desa",$dt->id)->groupBy("t_suara_tps.id_desa")->first();
+                $data['data_pemilih'][] = is_null($data_pemilih) ? 0 : (int) $data_pemilih->tot;
+            }
+            $data['labels'] = $labels;
+            return $data;
+        }elseif($berdsarkan == "tps"){
+            $id_desa = $request->id_desa;
+            $dt_tps = DB::table("m_tps")->select("id","nama")->where("id_desa",$id_desa)->get();
+            $labels = array();
+            $dataset = array();
+            foreach($dt_tps as $dt){
+                $labels[] = $dt->nama;
+                /** PEMILIH PASTI */
+                $data_pemilih_pasti = DB::table("t_pemilih_pasti")->select(DB::raw("COUNT(id) as tot"))->where("id_tps",$dt->id)->first();
+                $data['pemilih_pasti'][] = $data_pemilih_pasti->tot;
+
+                $data_suara_ayp = DB::table("t_suara_tps")->select(DB::raw("SUM(t_suara_tps.total_suara) as tot"))->join("m_kandidat","m_kandidat.id","=","t_suara_tps.id_kandidat")->where("m_kandidat.kategori","caleg")->where("t_suara_tps.id_tps",$dt->id)->groupBy("t_suara_tps.id_tps")->first();
+                $data['suara_ayp'][] = is_null($data_suara_ayp) ? 0 : (int) $data_suara_ayp->tot;
+
+                $data_pemilih = DB::table("t_suara_tps")->select(DB::raw("SUM(t_suara_tps.jumlah_pemilih) as tot"))->join("m_kandidat","m_kandidat.id","=","t_suara_tps.id_kandidat")->where("m_kandidat.kategori","caleg")->where("t_suara_tps.id_tps",$dt->id)->groupBy("t_suara_tps.id_tps")->first();
+                $data['data_pemilih'][] = is_null($data_pemilih) ? 0 : (int) $data_pemilih->tot;
+            }
+            $data['labels'] = $labels;
+            return $data;
+        }
+
+    }
+
+    
 
     public function store(Request $request)
     {

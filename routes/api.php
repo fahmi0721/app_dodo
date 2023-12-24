@@ -30,6 +30,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::prefix('kabupaten')->group(function () {
     Route::get('/',[KabupatenController::class, 'index']);
     Route::get('/get_data/{id}',[KabupatenController::class, 'show']);
+    Route::get('/get_data_kab',[KabupatenController::class, 'show_kab']);
+
     Route::post('/save',[KabupatenController::class, 'store']);
     Route::put('/update',[KabupatenController::class, 'update']);
     Route::delete('/delete/{id}',[KabupatenController::class, 'destroy']);
@@ -109,6 +111,7 @@ Route::prefix('pemilih-pasti')->group(function () {
 
 Route::prefix('suara')->group(function () {
     Route::get('/',[SuaraController::class, 'index']);
+    Route::post('/rekap',[SuaraController::class, 'rekapitulasi']);
     Route::get('/kabupaten/{id_kabupaten}',[SuaraController::class, 'index_kabupaten']);
     Route::get('/kecamatan/{id_kecamatan}',[SuaraController::class, 'index_kecamatan']);
     Route::get('/desa/{id_desa}',[SuaraController::class, 'index_desa']);

@@ -79,6 +79,13 @@
         <p>Suara TPS</p>
       </a>
     </li>
+
+    <li class="nav-item">
+      <a href="{{ url('admin/rekap_suara') }}" class="nav-link  @if(Request::segment(2) == 'rekap_suara') active @endif">
+        <i class="nav-icon fas fa-solid fa-box-tissue"></i>
+        <p>Rekapitulasi Suara</p>
+      </a>
+    </li>
     @endif
 
     @if(auth()->user()->level == "kabupaten")

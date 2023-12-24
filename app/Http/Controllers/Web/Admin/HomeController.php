@@ -69,7 +69,8 @@ class HomeController extends Controller
         return $color;
      }
 
-    public function dashboard_perolehan_suara(){
+    
+     public function dashboard_perolehan_suara(){
         $data = DB::table("t_suara_tps")->join("m_kandidat","t_suara_tps.id_kandidat","=","m_kandidat.id")->select("m_kandidat.id","m_kandidat.nama",DB::raw("SUM(t_suara_tps.total_suara) as tot_suara"))->distinct()->where("t_suara_tps.status","valid")->groupBy("t_suara_tps.id_kandidat")->orderBy("m_kandidat.id","ASC")->get();
         $get_data = $this->generate_data($data);
         try {
@@ -77,5 +78,9 @@ class HomeController extends Controller
         } catch (QueryException $e) {
             return response()->json(['status'=>'error','messages'=> $e->errorInfo[2] ], 400);
         }
+    }
+
+    public function dowload_data(){
+        
     }
 }

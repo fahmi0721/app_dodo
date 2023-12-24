@@ -96,6 +96,12 @@ Route::prefix('admin')->middleware("auth")->group(function () {
         Route::get('/edit/{id}',[SuaraController::class, 'form_edit']);
     });
 
+    Route::prefix('rekap_suara')->group(function () {
+        Route::get('/', function(){
+            return view("admin.rekap_suara.index");
+        });
+    });
+
 
 });
 
@@ -314,3 +320,4 @@ Route::get('/change_photo', function() {
 Route::get('/statistik',[HomeController::class, 'dashboard_statistik']);
 Route::get('/progres_suara',[HomeController::class, 'dashboard_progres_suara']);
 Route::get('/perolehan_suara',[HomeController::class, 'dashboard_perolehan_suara']);
+Route::get('/dwonload',[HomeController::class, 'dowload_data']);

@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string("foto",255)->after("id_tps");
+        Schema::create('m_pakan', function (Blueprint $table) {
+            $table->id();
+            $table->string("nama",100)->unique();
+            $table->string("keterangan");
+            $table->bigInteger("id_merk");
+            $table->bigInteger("id_tipe");
+            $table->timestamps();
         });
     }
 
@@ -21,8 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('m_pakan');
     }
 };

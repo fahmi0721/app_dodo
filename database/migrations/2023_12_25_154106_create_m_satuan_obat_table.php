@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_suara_tps', function (Blueprint $table) {
-            $table->integer("jumlah_pemilih")->default(0)->after("total_suara");
+        Schema::create('m_satuan_obat', function (Blueprint $table) {
+            $table->id();
+            $table->string("nama")->unique();
+            $table->string("keterangan")->nullable();
+            $table->timestamps();
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('t_suara_tps', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('m_satuan_obat');
     }
 };

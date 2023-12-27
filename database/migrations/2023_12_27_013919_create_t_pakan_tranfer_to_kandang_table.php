@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('t_pemilih_pasti', function (Blueprint $table) {
+        Schema::create('t_pakan_tranfer_to_kandang', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger("id_kabupaten")->index();
-            $table->bigInteger("id_kecamatan")->index();
-            $table->bigInteger("id_desa")->index();
-            $table->bigInteger("id_tps")->index();
-            $table->string("no_ktp")->unique();
-            $table->string("nama");
-            $table->string("alamat");
+            $table->bigInteger("id_proyek_asal")->index();
+            $table->bigInteger("id_proyek_tujuan")->index();
+            $table->bigInteger("id_pakan")->index();
+            $table->integer("jumlah");
+            $table->date("tanggal");
             $table->string("keterangan");
             $table->timestamps();
         });
@@ -30,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('t_pemilih_pasti');
+        Schema::dropIfExists('t_pakan_tranfer_to_kandang');
     }
 };

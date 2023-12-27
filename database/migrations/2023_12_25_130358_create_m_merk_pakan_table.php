@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('t_suara_tps', function (Blueprint $table) {
-            $table->enum('status',array('waiting','valid','invalid'))->default('waiting')->after('bukti');
+        Schema::create('m_merk_pakan', function (Blueprint $table) {
+            $table->id();
+            $table->string("nama")->unique();
+            $table->string("keterangan");
+            $table->timestamps();
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('t_suara_tps', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('m_merk_pakan');
     }
 };

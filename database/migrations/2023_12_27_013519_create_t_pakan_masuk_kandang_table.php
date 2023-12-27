@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('t_pakan_masuk_kandang', function (Blueprint $table) {
             $table->id();
+            $table->bigInteger("id_proyek")->index();
+            $table->bigInteger("id_pakan")->index();
+            $table->bigInteger("id_vendor")->index();
+            $table->integer("jumlah");
+            $table->date("tanggal");
+            $table->string("keterangan");
             $table->timestamps();
         });
     }

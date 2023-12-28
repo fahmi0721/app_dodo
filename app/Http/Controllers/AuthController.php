@@ -13,31 +13,117 @@ use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller
 {   
+   /**
+     * Create a new AuthController instance.
+     *
+     * @return void
+     */
     private $table = "users";
-    public function index(){
-        if(Auth::user()){
-            return redirect(Auth::user()->level);
-        }else{
-            return view("login");
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['login','register']]);
+    }
+
+    public function register(Request $request){
+        $validator = Validator::make($request->all(), [
+            'username' => 'required|string|unique:users',
+            'password' => 'required|string|confirmed|min:6',
+            'role' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "status"    => "warning",
+                "messages"   => $validator->errors()->first(),
+            ], 400);
+        }
+
+
+        DB::beginTransaction();
+        try {
+            $pushdata = array(
+                "username" => $request->username,
+                "password" => bcrypt($request->password),
+                "role" => $request->role,
+                "created_at" => Carbon::now()
+            );
+            if(!empty($request->id_karyawan)){
+                $pushdata += array("id_karyawan" => $request->id_karyawan);
+            }
+            DB::table($this->table)->insert($pushdata);
+            DB::commit();
+            return response()->json(['status'=>'success','messages'=>'success'], 200);
+        } catch(QueryException $e) { 
+            DB::rollback();
+            return response()->json(['status'=>'error','messages'=> $e->errorInfo[2] ], 400);
         }
     }
 
-    public function login(Request $request){
+    /**
+     * Get a JWT via given credentials.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function login(Request $request)
+    {
         $credentials = $request->validate([
             'username' => ['required'],
             'password' => ['required'],
         ]);
- 
-        if (Auth::attempt($credentials)) {
-            return response()->json(['status'=>'success','messages'=>"login success"], 200);
+
+        if (! $token = Auth::attempt($credentials)) {
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
-        return response()->json(['status'=>'error','messages'=> 'The provided credentials do not match our records' ], 400);
+        return $this->respondWithToken($token);
     }
 
-    public function logout(Request $request){
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect("/login");
+    /**
+     * Get the authenticated User.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function me()
+    {
+        return response()->json(auth()->user());
+    }
+
+    /**
+     * Log the user out (Invalidate the token).
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function logout()
+    {
+        auth()->logout();
+
+        return response()->json(['message' => 'Successfully logged out']);
+    }
+
+    /**
+     * Refresh a token.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function refresh()
+    {
+        return $this->respondWithToken(auth()->refresh());
+    }
+
+    /**
+     * Get the token array structure.
+     *
+     * @param  string $token
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function respondWithToken($token)
+    {
+        return response()->json([
+            'status' => "success",
+            'messages' => "login success",
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth()->factory()->getTTL() * 60
+        ]);
     }
 }

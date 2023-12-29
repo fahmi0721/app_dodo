@@ -8,6 +8,10 @@ use App\Http\Controllers\Api\ApiWilayahPenugasanController;
 use App\Http\Controllers\Api\ApiMerkPakanController;
 use App\Http\Controllers\Api\ApiTipePakanController;
 use App\Http\Controllers\Api\ApiVendorPakanController;
+use App\Http\Controllers\Api\ApiSatuanObatController;
+use App\Http\Controllers\Api\ApiPeternakController;
+use App\Http\Controllers\Api\ApiStandarController;
+use App\Http\Controllers\Api\ApiObatController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -72,4 +76,36 @@ Route::group(['middleware' => 'api', 'prefix' => 'vendor_pakan'], function($rout
     Route::delete("delete",[ApiVendorPakanController::class,'destroy']);
     Route::get("get_data/{id}",[ApiVendorPakanController::class,'show']);
     Route::get("/",[ApiVendorPakanController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'satuan_obat'], function($router){
+    Route::post("save",[ApiSatuanObatController::class,'store']);
+    Route::put("update",[ApiSatuanObatController::class,'update']);
+    Route::delete("delete",[ApiSatuanObatController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiSatuanObatController::class,'show']);
+    Route::get("/",[ApiSatuanObatController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'peternak'], function($router){
+    Route::post("save",[ApiPeternakController::class,'store']);
+    Route::put("update",[ApiPeternakController::class,'update']);
+    Route::delete("delete",[ApiPeternakController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiPeternakController::class,'show']);
+    Route::get("/",[ApiPeternakController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'standar'], function($router){
+    Route::post("save",[ApiStandarController::class,'store']);
+    Route::put("update",[ApiStandarController::class,'update']);
+    Route::delete("delete",[ApiStandarController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiStandarController::class,'show']);
+    Route::get("/",[ApiStandarController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'obat'], function($router){
+    Route::post("save",[ApiObatController::class,'store']);
+    Route::put("update",[ApiObatController::class,'update']);
+    Route::delete("delete",[ApiObatController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiObatController::class,'show']);
+    Route::get("/",[ApiObatController::class,'index']);
 });

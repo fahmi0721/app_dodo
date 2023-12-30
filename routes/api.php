@@ -12,6 +12,13 @@ use App\Http\Controllers\Api\ApiSatuanObatController;
 use App\Http\Controllers\Api\ApiPeternakController;
 use App\Http\Controllers\Api\ApiStandarController;
 use App\Http\Controllers\Api\ApiObatController;
+use App\Http\Controllers\Api\ApiKandangController;
+use App\Http\Controllers\Api\ApiPakanController;
+use App\Http\Controllers\Api\ApiProyekController;
+use App\Http\Controllers\Api\ApiUsersController;
+use App\Http\Controllers\Api\ApiPakanMasukKandangController;
+use App\Http\Controllers\Api\ApiTransferAntarKandangController;
+use App\Http\Controllers\Api\ApiMutasiPakanKandangController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -108,4 +115,59 @@ Route::group(['middleware' => 'api', 'prefix' => 'obat'], function($router){
     Route::delete("delete",[ApiObatController::class,'destroy']);
     Route::get("get_data/{id}",[ApiObatController::class,'show']);
     Route::get("/",[ApiObatController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'kandang'], function($router){
+    Route::post("save",[ApiKandangController::class,'store']);
+    Route::put("update",[ApiKandangController::class,'update']);
+    Route::delete("delete",[ApiKandangController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiKandangController::class,'show']);
+    Route::get("/",[ApiKandangController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'pakan'], function($router){
+    Route::post("save",[ApiPakanController::class,'store']);
+    Route::put("update",[ApiPakanController::class,'update']);
+    Route::delete("delete",[ApiPakanController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiPakanController::class,'show']);
+    Route::get("/",[ApiPakanController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'proyek'], function($router){
+    Route::post("save",[ApiProyekController::class,'store']);
+    Route::put("update",[ApiProyekController::class,'update']);
+    Route::delete("delete",[ApiProyekController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiProyekController::class,'show']);
+    Route::get("/",[ApiProyekController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'users'], function($router){
+    Route::post("save",[ApiUsersController::class,'store']);
+    Route::put("update",[ApiUsersController::class,'update']);
+    Route::delete("delete",[ApiUsersController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiUsersController::class,'show']);
+    Route::get("/",[ApiUsersController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'pakan_masuk_kandang'], function($router){
+    Route::post("save",[ApiPakanMasukKandangController::class,'store']);
+    Route::put("update",[ApiPakanMasukKandangController::class,'update']);
+    Route::delete("delete",[ApiPakanMasukKandangController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiPakanMasukKandangController::class,'show']);
+    Route::get("/",[ApiPakanMasukKandangController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'pakan_transfer_kandang'], function($router){
+    Route::post("save",[ApiTransferAntarKandangController::class,'store']);
+    Route::put("update",[ApiTransferAntarKandangController::class,'update']);
+    Route::delete("delete",[ApiTransferAntarKandangController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiTransferAntarKandangController::class,'show']);
+    Route::get("/",[ApiTransferAntarKandangController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'mutasi_pakan_kandang'], function($router){
+    Route::get("/",[ApiMutasiPakanKandangController::class,'index']);
+    Route::get("/get_filter_by_proyek/{proyek_id}",[ApiMutasiPakanKandangController::class,'show_filter_proyek']);
+    Route::get("/get_stok_by_proyek/{proyek_id}",[ApiMutasiPakanKandangController::class,'show_filter_stok_proyek']);
+    Route::get("/get_stok",[ApiMutasiPakanKandangController::class,'show_filter_stok']);
 });

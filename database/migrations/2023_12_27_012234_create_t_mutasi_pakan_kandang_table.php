@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer("jumlah");
             $table->date("tanggal");
             $table->enum("status",array("masuk","keluar"));
-            $table->enum("via", array("pakan_masuk","transfer_masuk","tranfer_keluar","tepakai"));
+            $table->enum("via", array("pakan_masuk","transfer","tepakai"));
             $table->string("keterangan");
             $table->timestamps();
         });

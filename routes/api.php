@@ -19,6 +19,11 @@ use App\Http\Controllers\Api\ApiUsersController;
 use App\Http\Controllers\Api\ApiPakanMasukKandangController;
 use App\Http\Controllers\Api\ApiTransferAntarKandangController;
 use App\Http\Controllers\Api\ApiMutasiPakanKandangController;
+use App\Http\Controllers\Api\ApiPakanMasukGudangController;
+use App\Http\Controllers\Api\ApiPakanTranferGudangController;
+use App\Http\Controllers\Api\ApiMutasiPakanGudangController;
+use App\Http\Controllers\Api\ApiHargaPakanController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -131,6 +136,11 @@ Route::group(['middleware' => 'api', 'prefix' => 'pakan'], function($router){
     Route::delete("delete",[ApiPakanController::class,'destroy']);
     Route::get("get_data/{id}",[ApiPakanController::class,'show']);
     Route::get("/",[ApiPakanController::class,'index']);
+    Route::get("/harga/{id}",[ApiHargaPakanController::class,'index']);
+    Route::post("/harga/{id_pakan}/save",[ApiHargaPakanController::class,'store']);
+    Route::put("/harga/{id_pakan}/update",[ApiHargaPakanController::class,'update']);
+    Route::delete("/harga/{id_pakan}/delete/",[ApiHargaPakanController::class,'destroy']);
+    Route::get("/harga/{id_pakan}/get_data/",[ApiHargaPakanController::class,'show']);
 });
 
 Route::group(['middleware' => 'api', 'prefix' => 'proyek'], function($router){
@@ -171,3 +181,27 @@ Route::group(['middleware' => 'api', 'prefix' => 'mutasi_pakan_kandang'], functi
     Route::get("/get_stok_by_proyek/{proyek_id}",[ApiMutasiPakanKandangController::class,'show_filter_stok_proyek']);
     Route::get("/get_stok",[ApiMutasiPakanKandangController::class,'show_filter_stok']);
 });
+
+Route::group(['middleware' => 'api', 'prefix' => 'pakan_masuk_gudang'], function($router){
+    Route::post("save",[ApiPakanMasukGudangController::class,'store']);
+    Route::put("update",[ApiPakanMasukGudangController::class,'update']);
+    Route::delete("delete",[ApiPakanMasukGudangController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiPakanMasukGudangController::class,'show']);
+    Route::get("/",[ApiPakanMasukGudangController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'pakan_transfer_gudang'], function($router){
+    Route::post("save",[ApiPakanTranferGudangController::class,'store']);
+    Route::put("update",[ApiPakanTranferGudangController::class,'update']);
+    Route::delete("delete",[ApiPakanTranferGudangController::class,'destroy']);
+    Route::get("get_data/{id}",[ApiPakanTranferGudangController::class,'show']);
+    Route::get("/",[ApiPakanTranferGudangController::class,'index']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'mutasi_pakan_gudang'], function($router){
+    Route::get("/",[ApiMutasiPakanGudangController::class,'index']);
+    Route::get("/get_filter_by_pakan/{pakan_id}",[ApiMutasiPakanGudangController::class,'show_filter_pakan']);
+    Route::get("/get_stok_by_pakan/{pakan_id}",[ApiMutasiPakanGudangController::class,'show_filter_stok_by_pakan']);
+    Route::get("/get_stok",[ApiMutasiPakanGudangController::class,'show_filter_stok']);
+});
+

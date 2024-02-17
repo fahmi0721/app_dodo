@@ -10,9 +10,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 
 use DataTables;
-class ApiPakanController extends Controller
+class ApiPakanMasukGudangController extends Controller
 {
-    private $table = "m_pakan";
+    private $table = "t_pakan_masuk_gudang";
+    private $table_mutasi = "t_mutasi_pakan_gudang";
+    private $via = "pakan_masuk";
+    private $status = "masuk";
     private $pk_table = "";
 
     public function __construct()
@@ -22,9 +25,9 @@ class ApiPakanController extends Controller
 
     public function index(){
         $data = DB::table($this->table)
-                ->select($this->table.".*",DB::raw("m_tipe_pakan.nama as tipe"),DB::raw("m_merk_pakan.nama as merk"))
-                ->join("m_tipe_pakan",$this->table.".id_tipe","=","m_tipe_pakan.id")
-                ->join("m_merk_pakan",$this->table.".id_merk","=","m_merk_pakan.id")
+                ->select($this->table.".*",DB::raw("m_pakan.nama as pakan, m_vendor_pakan.nama as vendor"))
+                ->join("m_pakan",$this->table.".id_pakan","=","m_pakan.id")
+                ->join("m_vendor_pakan",$this->table.".id_vendor","=","m_vendor_pakan.id")
                 ->get();
         return Datatables::of($data)
         ->addIndexColumn()
@@ -39,12 +42,11 @@ class ApiPakanController extends Controller
 
     public function store(Request $request){
         $validator = Validator::make($request->all(), [
-            'nama' => 'required|unique:'.$this->table.',nama',
-            'merk' => 'required',
-            'tipe' => 'required',
-            'harga' => 'required',
-            'valid_from' => 'required',
-            'valid_to' => 'required',
+            'pakan' => 'required',
+            'vendor' => 'required',
+            'jumlah' => 'required|numeric|digits_between:1,11',
+            'tanggal' => 'required',
+            'keterangan' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -56,13 +58,15 @@ class ApiPakanController extends Controller
         DB::beginTransaction();
         try {
             $pushdata = array(
-                "nama" => $request->nama,
-                "id_merk" => $request->merk,
-                "id_tipe" => $request->tipe,
+                'id_pakan' => $request->pakan,
+                'id_vendor' => $request->vendor,
+                'jumlah' => $request->jumlah,
+                'tanggal' => $request->tanggal,
+                'keterangan' => $request->keterangan,
                 "created_at" => Carbon::now()
             );
-            $id_pakan = DB::table($this->table)->insertGetId($pushdata);
-            $this->save_harga($id_pakan,$request->valid_from,$request->valid_to,$request->harga);
+            $id_transaksi = DB::table($this->table)->insertGetId($pushdata);
+            $this->save_to_mutasi_pakan_gudang($request,$id_transaksi);
             DB::commit();
             return response()->json(['status'=>'success','messages'=>'success'], 200);
         } catch(QueryException $e) { 
@@ -71,28 +75,18 @@ class ApiPakanController extends Controller
         }
     }
 
-    private function save_harga($id_pakan,$valid_from,$valid_to,$harga){
-        $harga_convert = str_replace(".","",$harga);
-        $pushdata = array(
-            "id_pakan" => $id_pakan,
-            "harga" => $harga_convert,
-            "valid_from" => $valid_from,
-            "valid_to" => $valid_to,
-            "created_at" => Carbon::now()
-        );
-        DB::table("m_harga_pakan")->insert($pushdata);
-       
-    }
-
     public function update(Request $request){
         $this->pk_table = base64_decode($request->id);
-        $validator = Validator::make($request->all(), [
-            "id" => "required",
-            'nama' => 'required|unique:'.$this->table.',nama,'.$this->pk_table,
-            'merk' => 'required',
-            'tipe' => 'required',
-        ]);
-
+        $setting = [
+            'id' => 'required',
+            'pakan' => 'required',
+            'vendor' => 'required',
+            'jumlah' => 'required|numeric|digits_between:1,11',
+            'tanggal' => 'required',
+            'keterangan' => 'required',
+        ];
+       
+        $validator = Validator::make($request->all(), $setting);
         if ($validator->fails()) {
             return response()->json([
                 "status"    => "warning",
@@ -102,12 +96,16 @@ class ApiPakanController extends Controller
         DB::beginTransaction();
         try {
             $pushdata = array(
-                "nama" => $request->nama,
-                "id_merk" => $request->merk,
-                "id_tipe" => $request->tipe,
+                'id_pakan' => $request->pakan,
+                'id_vendor' => $request->vendor,
+                'jumlah' => $request->jumlah,
+                'tanggal' => $request->tanggal,
+                'keterangan' => $request->keterangan,
                 "updated_at" => Carbon::now()
             );
+           
             DB::table($this->table)->where("id",$this->pk_table)->update($pushdata);
+            $this->save_to_mutasi_pakan_gudang($request,$this->pk_table);
             DB::commit();
             return response()->json(['status'=>'success','messages'=>'success'], 200);
         } catch(QueryException $e) { 
@@ -131,7 +129,6 @@ class ApiPakanController extends Controller
         $this->pk_table = base64_decode($request->id);
         try {
             DB::table($this->table)->where("id",$this->pk_table)->delete();
-            DB::table("m_harga_pakan")->where("id_pakan",$this->pk_table)->delete();
             DB::commit();
             return response()->json(['status'=>'success','messages'=>'success'], 200);
         } catch(QueryException $e) { 
@@ -140,15 +137,29 @@ class ApiPakanController extends Controller
         }
     }
 
-
     public function show($id){
         $this->pk_table = base64_decode($id);
         $res = DB::table($this->table)
-                ->select($this->table.".*",DB::raw("m_tipe_pakan.nama as tipe"),DB::raw("m_merk_pakan.nama as merk"))
-                ->join("m_tipe_pakan",$this->table.".id_tipe","=","m_tipe_pakan.id")
-                ->join("m_merk_pakan",$this->table.".id_merk","=","m_merk_pakan.id")
-                ->where($this->table.".id",$this->pk_table)
+                ->select($this->table.".*",DB::raw("m_pakan.nama as pakan, m_vendor_pakan.nama as vendor"))
+                ->join("m_pakan",$this->table.".id_pakan","=","m_pakan.id")
+                ->join("m_vendor_pakan",$this->table.".id_vendor","=","m_vendor_pakan.id")
                 ->first();
         return response()->json(["status" => "success", "messages" => "Success", "data" => $res],200);
+    }
+
+    private function save_to_mutasi_pakan_gudang($request,$id_transaksi){
+        $pushdata = array(
+            'id_pakan' => $request->pakan,
+            'id_transaksi' => $id_transaksi,
+            'jumlah' => $request->jumlah,
+            'tanggal' => $request->tanggal,
+            'status' => $this->status,
+            'via' => $this->via,
+            'keterangan' => $request->keterangan,
+            "created_at" => Carbon::now()
+        );
+        
+        DB::table($this->table_mutasi)->insert($pushdata);
+        return true;
     }
 }

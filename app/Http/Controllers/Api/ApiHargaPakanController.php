@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 
 use DataTables;
-class ApiPakanController extends Controller
+class ApiHargaPakanController extends Controller
 {
-    private $table = "m_pakan";
+    private $table = "m_harga_pakan";
     private $pk_table = "";
 
     public function __construct()
@@ -20,11 +20,12 @@ class ApiPakanController extends Controller
         $this->middleware('auth:api');
     }
 
-    public function index(){
+    public function index($id_pakan){
+        $id = base64_decode($id_pakan);
         $data = DB::table($this->table)
-                ->select($this->table.".*",DB::raw("m_tipe_pakan.nama as tipe"),DB::raw("m_merk_pakan.nama as merk"))
-                ->join("m_tipe_pakan",$this->table.".id_tipe","=","m_tipe_pakan.id")
-                ->join("m_merk_pakan",$this->table.".id_merk","=","m_merk_pakan.id")
+                ->select($this->table.".*",DB::raw("m_pakan.nama"))
+                ->join("m_pakan",$this->table.".id_pakan","=","m_pakan.id")
+                ->where(DB::raw($this->table.".id_pakan"),"=",$id)
                 ->get();
         return Datatables::of($data)
         ->addIndexColumn()
@@ -37,11 +38,8 @@ class ApiPakanController extends Controller
         ->make(true);
     }
 
-    public function store(Request $request){
+    public function store(Request $request,$id_pakan){
         $validator = Validator::make($request->all(), [
-            'nama' => 'required|unique:'.$this->table.',nama',
-            'merk' => 'required',
-            'tipe' => 'required',
             'harga' => 'required',
             'valid_from' => 'required',
             'valid_to' => 'required',
@@ -53,44 +51,32 @@ class ApiPakanController extends Controller
                 "messages"   => $validator->errors()->first(),
             ], 400);
         }
+        $harga_convert = str_replace(".","",$request->harga);
+        $id_pakan = base64_decode($id_pakan);
         DB::beginTransaction();
         try {
             $pushdata = array(
-                "nama" => $request->nama,
-                "id_merk" => $request->merk,
-                "id_tipe" => $request->tipe,
+                "id_pakan" => $id_pakan,
+                "harga" => $harga_convert,
+                "valid_from" => $request->valid_from,
+                "valid_to" => $request->valid_to,
                 "created_at" => Carbon::now()
             );
-            $id_pakan = DB::table($this->table)->insertGetId($pushdata);
-            $this->save_harga($id_pakan,$request->valid_from,$request->valid_to,$request->harga);
+            DB::table($this->table)->insert($pushdata);
             DB::commit();
-            return response()->json(['status'=>'success','messages'=>'success'], 200);
+            return response()->json(['status'=>'success','messages'=>'success'.$id_pakan], 200);
         } catch(QueryException $e) { 
             DB::rollback();
             return response()->json(['status'=>'error','messages'=> $e->errorInfo[2] ], 400);
         }
     }
 
-    private function save_harga($id_pakan,$valid_from,$valid_to,$harga){
-        $harga_convert = str_replace(".","",$harga);
-        $pushdata = array(
-            "id_pakan" => $id_pakan,
-            "harga" => $harga_convert,
-            "valid_from" => $valid_from,
-            "valid_to" => $valid_to,
-            "created_at" => Carbon::now()
-        );
-        DB::table("m_harga_pakan")->insert($pushdata);
-       
-    }
-
-    public function update(Request $request){
-        $this->pk_table = base64_decode($request->id);
+    public function update(Request $request,$id_pakan){
         $validator = Validator::make($request->all(), [
-            "id" => "required",
-            'nama' => 'required|unique:'.$this->table.',nama,'.$this->pk_table,
-            'merk' => 'required',
-            'tipe' => 'required',
+            'id' => 'required',
+            'harga' => 'required',
+            'valid_from' => 'required',
+            'valid_to' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -99,12 +85,16 @@ class ApiPakanController extends Controller
                 "messages"   => $validator->errors()->first(),
             ], 400);
         }
+        $harga_convert = str_replace(".","",$request->harga);
+        $id_pakan = base64_decode($id_pakan);
+        $this->pk_table = base64_decode($request->id);
         DB::beginTransaction();
         try {
             $pushdata = array(
-                "nama" => $request->nama,
-                "id_merk" => $request->merk,
-                "id_tipe" => $request->tipe,
+                "id_pakan" => $id_pakan,
+                "harga" => $harga_convert,
+                "valid_from" => $request->valid_from,
+                "valid_to" => $request->valid_to,
                 "updated_at" => Carbon::now()
             );
             DB::table($this->table)->where("id",$this->pk_table)->update($pushdata);
@@ -131,7 +121,6 @@ class ApiPakanController extends Controller
         $this->pk_table = base64_decode($request->id);
         try {
             DB::table($this->table)->where("id",$this->pk_table)->delete();
-            DB::table("m_harga_pakan")->where("id_pakan",$this->pk_table)->delete();
             DB::commit();
             return response()->json(['status'=>'success','messages'=>'success'], 200);
         } catch(QueryException $e) { 
@@ -140,13 +129,11 @@ class ApiPakanController extends Controller
         }
     }
 
-
-    public function show($id){
-        $this->pk_table = base64_decode($id);
+    public function show(Request $request){
+        $this->pk_table = base64_decode($request->id);
         $res = DB::table($this->table)
-                ->select($this->table.".*",DB::raw("m_tipe_pakan.nama as tipe"),DB::raw("m_merk_pakan.nama as merk"))
-                ->join("m_tipe_pakan",$this->table.".id_tipe","=","m_tipe_pakan.id")
-                ->join("m_merk_pakan",$this->table.".id_merk","=","m_merk_pakan.id")
+                ->select($this->table.".*",DB::raw("m_pakan.nama"))
+                ->join("m_pakan",$this->table.".id_pakan","=","m_pakan.id")
                 ->where($this->table.".id",$this->pk_table)
                 ->first();
         return response()->json(["status" => "success", "messages" => "Success", "data" => $res],200);

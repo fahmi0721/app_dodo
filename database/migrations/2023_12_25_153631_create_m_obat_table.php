@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string("nama")->unique();
             $table->string("kemasan");
             $table->string("id_satuan");
-            $table->integer("harga")->default(0);
             $table->timestamps();
         });
     }

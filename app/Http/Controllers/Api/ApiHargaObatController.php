@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 
 use DataTables;
-class ApiHargaPakanController extends Controller
+class ApiHargaObatController extends Controller
 {
-    private $table = "m_harga_pakan";
+    private $table = "m_harga_obat";
     private $pk_table = "";
 
     public function __construct()
@@ -20,12 +20,12 @@ class ApiHargaPakanController extends Controller
         $this->middleware('auth:api');
     }
 
-    public function index($id_pakan){
-        $id = base64_decode($id_pakan);
+    public function index($id_obat){
+        $id = base64_decode($id_obat);
         $data = DB::table($this->table)
-                ->select($this->table.".*",DB::raw("m_pakan.nama"))
-                ->join("m_pakan",$this->table.".id_pakan","=","m_pakan.id")
-                ->where(DB::raw($this->table.".id_pakan"),"=",$id)
+                ->select($this->table.".*",DB::raw("m_obat.nama"))
+                ->join("m_obat",$this->table.".id_obat","=","m_obat.id")
+                ->where(DB::raw($this->table.".id_obat"),"=",$id)
                 ->get();
         return Datatables::of($data)
         ->addIndexColumn()
@@ -38,7 +38,7 @@ class ApiHargaPakanController extends Controller
         ->make(true);
     }
 
-    public function store(Request $request,$id_pakan){
+    public function store(Request $request,$id_obat){
         $validator = Validator::make($request->all(), [
             'harga' => 'required',
             'valid_from' => 'required',
@@ -52,11 +52,11 @@ class ApiHargaPakanController extends Controller
             ], 400);
         }
         $harga_convert = str_replace(".","",$request->harga);
-        $id_pakan = base64_decode($id_pakan);
+        $id_obat = base64_decode($id_obat);
         DB::beginTransaction();
         try {
             $pushdata = array(
-                "id_pakan" => $id_pakan,
+                "id_obat" => $id_obat,
                 "harga" => $harga_convert,
                 "valid_from" => $request->valid_from,
                 "valid_to" => $request->valid_to,
@@ -71,7 +71,7 @@ class ApiHargaPakanController extends Controller
         }
     }
 
-    public function update(Request $request,$id_pakan){
+    public function update(Request $request,$id_obat){
         $validator = Validator::make($request->all(), [
             'id' => 'required',
             'harga' => 'required',
@@ -86,12 +86,12 @@ class ApiHargaPakanController extends Controller
             ], 400);
         }
         $harga_convert = str_replace(".","",$request->harga);
-        $id_pakan = base64_decode($id_pakan);
+        $id_obat = base64_decode($id_obat);
         $this->pk_table = base64_decode($request->id);
         DB::beginTransaction();
         try {
             $pushdata = array(
-                "id_pakan" => $id_pakan,
+                "id_obat" => $id_obat,
                 "harga" => $harga_convert,
                 "valid_from" => $request->valid_from,
                 "valid_to" => $request->valid_to,
@@ -132,8 +132,8 @@ class ApiHargaPakanController extends Controller
     public function show(Request $request){
         $this->pk_table = base64_decode($request->id);
         $res = DB::table($this->table)
-                ->select($this->table.".*",DB::raw("m_pakan.nama"))
-                ->join("m_pakan",$this->table.".id_pakan","=","m_pakan.id")
+                ->select($this->table.".*",DB::raw("m_obat.nama"))
+                ->join("m_obat",$this->table.".id_obat","=","m_obat.id")
                 ->where($this->table.".id",$this->pk_table)
                 ->first();
         return response()->json(["status" => "success", "messages" => "Success", "data" => $res],200);

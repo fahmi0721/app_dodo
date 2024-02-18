@@ -41,7 +41,9 @@ class ApiObatController extends Controller
             'nama' => 'required|unique:m_obat,nama',
             'kemasan' => 'required',
             'id_satuan' => 'required',
-            'harga' => 'required|numeric|digits_between:1,11',
+            'harga' => 'required',
+            'valid_from' => 'required',
+            'valid_to' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -56,16 +58,29 @@ class ApiObatController extends Controller
                 "nama" => $request->nama,
                 "kemasan" => $request->kemasan,
                 "id_satuan" => $request->id_satuan,
-                "harga" => $request->harga,
                 "created_at" => Carbon::now()
             );
-            DB::table($this->table)->insert($pushdata);
+            $id_obat = DB::table($this->table)->insertGetId($pushdata);
+            $this->save_harga($id_obat,$request->harga,$request->valid_from,$request->valid_to);
             DB::commit();
             return response()->json(['status'=>'success','messages'=>'success'], 200);
         } catch(QueryException $e) { 
             DB::rollback();
             return response()->json(['status'=>'error','messages'=> $e->errorInfo[2] ], 400);
         }
+    }
+
+    private function save_harga($id_obat,$harga,$valid_from,$valid_to){
+        $harga_convert = str_replace(".","",$harga);
+        $pushdata = array(
+            "id_obat" => $id_obat,
+            "harga" => $harga_convert,
+            "valid_from" => $valid_from,
+            "valid_to" => $valid_to,
+            "created_at" => Carbon::now()
+        );
+        DB::table("m_harga_obat")->insert($pushdata);
+        return true;
     }
 
     public function update(Request $request){
@@ -75,7 +90,6 @@ class ApiObatController extends Controller
             'nama' => 'required|unique:m_obat,nama,'.$this->pk_table,
             'kemasan' => 'required',
             'id_satuan' => 'required',
-            'harga' => 'required|numeric|digits_between:1,11',
         ]);
 
         if ($validator->fails()) {
@@ -90,7 +104,6 @@ class ApiObatController extends Controller
                 "nama" => $request->nama,
                 "kemasan" => $request->kemasan,
                 "id_satuan" => $request->id_satuan,
-                "harga" => $request->harga,
                 "updated_at" => Carbon::now()
             );
             DB::table($this->table)->where("id",$this->pk_table)->update($pushdata);
@@ -117,6 +130,7 @@ class ApiObatController extends Controller
         $this->pk_table = base64_decode($request->id);
         try {
             DB::table($this->table)->where("id",$this->pk_table)->delete();
+            DB::table("m_harga_obat")->where("id_obat",$this->pk_table)->delete();
             DB::commit();
             return response()->json(['status'=>'success','messages'=>'success'], 200);
         } catch(QueryException $e) { 

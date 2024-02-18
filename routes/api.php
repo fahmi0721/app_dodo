@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\ApiPakanMasukGudangController;
 use App\Http\Controllers\Api\ApiPakanTranferGudangController;
 use App\Http\Controllers\Api\ApiMutasiPakanGudangController;
 use App\Http\Controllers\Api\ApiHargaPakanController;
+use App\Http\Controllers\Api\ApiHargaObatController;
 
 /*
 |--------------------------------------------------------------------------
@@ -120,6 +121,11 @@ Route::group(['middleware' => 'api', 'prefix' => 'obat'], function($router){
     Route::delete("delete",[ApiObatController::class,'destroy']);
     Route::get("get_data/{id}",[ApiObatController::class,'show']);
     Route::get("/",[ApiObatController::class,'index']);
+    Route::get("/harga/{id_obat}",[ApiHargaObatController::class,'index']);
+    Route::post("/harga/{id_obat}/save",[ApiHargaObatController::class,'store']);
+    Route::put("/harga/{id_obat}/update",[ApiHargaObatController::class,'update']);
+    Route::delete("/harga/{id_obat}/delete",[ApiHargaObatController::class,'destroy']);
+    Route::get("/harga/{id_obat}/get_data",[ApiHargaObatController::class,'show']);
 });
 
 Route::group(['middleware' => 'api', 'prefix' => 'kandang'], function($router){

@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\ApiPakanTranferGudangController;
 use App\Http\Controllers\Api\ApiMutasiPakanGudangController;
 use App\Http\Controllers\Api\ApiHargaPakanController;
 use App\Http\Controllers\Api\ApiHargaObatController;
+use App\Http\Controllers\Api\ApiObatGudangController;
+use App\Http\Controllers\Api\ApiOrderObatKandangController;
 
 /*
 |--------------------------------------------------------------------------
@@ -211,3 +213,19 @@ Route::group(['middleware' => 'api', 'prefix' => 'mutasi_pakan_gudang'], functio
     Route::get("/get_stok",[ApiMutasiPakanGudangController::class,'show_filter_stok']);
 });
 
+Route::group(['middleware' => 'api', 'prefix' => 'mutasi_obat_gudang'], function($router){
+    Route::get("/",[ApiObatGudangController::class,'index']);
+    Route::get("/get_data/{id}",[ApiObatGudangController::class,'show']);
+    Route::post("/save",[ApiObatGudangController::class,'store']);
+    Route::put("/update",[ApiObatGudangController::class,'update']);
+    Route::delete("/delete",[ApiObatGudangController::class,'destroy']);
+});
+
+Route::group(['middleware' => 'api', 'prefix' => 'order_obat_kandang'], function($router){
+    Route::get("/",[ApiOrderObatKandangController::class,'index']);
+    Route::get("/get_data/{id}",[ApiOrderObatKandangController::class,'show']);
+    Route::post("/save",[ApiOrderObatKandangController::class,'store']);
+    Route::put("/update",[ApiOrderObatKandangController::class,'update']);
+    Route::post("/approved",[ApiOrderObatKandangController::class,'approve']);
+    Route::delete("/delete",[ApiOrderObatKandangController::class,'destroy']);
+});

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->bigInteger("id_proyek")->index();
             $table->integer("jumlah");
             $table->date("tanggal");
-            $table->enum("staus",array("inprogres","success","invalid"))->default("inprogres");
+            $table->enum("status",array("inprogres","success","invalid"))->default("inprogres");
             $table->string("keterangan");
             $table->timestamps();
         });
